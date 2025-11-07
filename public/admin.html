@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bantay Barangay - Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-group label {
+            font-weight: 500;
+        }
+        
+        .filter-group select, .filter-group input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .reports-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+        }
+        
+        .reports-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .reports-table th,
+        .reports-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .reports-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .reports-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-in-progress { background: #d4edda; color: #155724; }
+        .status-resolved { background: #d1ecf1; color: #0c5460; }
+        .status-dismissed { background: #f8d7da; color: #721c24; }
+        
+        .category-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-right: 0.25rem;
+        }
+        
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            max-width: 500px;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+            
+            .reports-table {
+                font-size: 0.8rem;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏘️ Bantay Barangay Admin Dashboard</h1>
+        <p>Manage community incident reports and emergency responses</p>
+    </div>
+
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-reports">0</div>
+                <div class="stat-label">Total Reports</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pending-reports">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="active-reports">0</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="resolved-reports">0</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="status-filter">Status:</label>
+                <select id="status-filter">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Dismissed">Dismissed</option>
+                </select>
+
+                <label for="category-filter">Category:</label>
+                <select id="category-filter">
+                    <option value="">All Categories</option>
+                    <option value="Flood">Flood</option>
+                    <option value="Fire">Fire</option>
+                    <option value="Accident">Accident</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <label for="date-filter">Date:</label>
+                <input type="date" id="date-filter">
+
+                <button onclick="applyFilters()" class="action-btn btn-primary">Apply Filters</button>
+                <button onclick="clearFilters()" class="action-btn">Clear</button>
+            </div>
+        </div>
+
+        <!-- Reports Table -->
+        <div class="reports-section">
+            <div class="section-header">
+                📋 Incident Reports
+                <button onclick="refreshReports()" class="action-btn btn-primary" style="float: right;">Refresh</button>
+            </div>
+            
+            <div id="loading" class="loading">Loading reports...</div>
+            
+            <table class="reports-table" id="reports-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="reports-tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Update Status Modal -->
+    <div id="status-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Update Report Status</h3>
+            <div style="margin: 1rem 0;">
+                <label for="new-status">New Status:</label>
+                <select id="new-status" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;">
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Dismissed">Dismissed</option>
+                </select>
+            </div>
+            <div style="text-align: right;">
+                <button onclick="closeModal()" class="action-btn">Cancel</button>
+                <button onclick="updateStatus()" class="action-btn btn-primary">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allReports = [];
+        let currentReportId = null;
+
+        // Load reports on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadReports();
+        });
+
+        async function loadReports() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('reports-table').style.display = 'none';
+                
+                const response = await fetch('/api/reports');
+                const reports = await response.json();
+                
+                allReports = reports;
+                displayReports(reports);
+                updateStats(reports);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('reports-table').style.display = 'table';
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                document.getElementById('loading').textContent = 'Error loading reports. Please try again.';
+            }
+        }
+
+        function displayReports(reports) {
+            const tbody = document.getElementById('reports-tbody');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #666;">No reports found</td></tr>';
+                return;
+            }
+
+            reports.forEach(report => {
+                const row = document.createElement('tr');
+                const date = new Date(report.created_at).toLocaleDateString();
+                const time = new Date(report.created_at).toLocaleTimeString();
+                
+                row.innerHTML = `
+                    <td><strong>#${report.id}</strong></td>
+                    <td>${date}<br><small>${time}</small></td>
+                    <td><span class="category-badge">${report.category || 'N/A'}</span></td>
+                    <td style="max-width: 200px; word-wrap: break-word;">${report.description || 'N/A'}</td>
+                    <td>${report.location || 'N/A'}</td>
+                    <td><span class="status-badge status-${(report.status || 'pending').toLowerCase().replace(' ', '-')}">${report.status || 'Pending'}</span></td>
+                    <td>
+                        <button onclick="openStatusModal('${report.id}')" class="action-btn btn-primary">Update</button>
+                        <button onclick="viewDetails('${report.id}')" class="action-btn btn-success">View</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateStats(reports) {
+            const total = reports.length;
+            const pending = reports.filter(r => (r.status || 'Pending') === 'Pending').length;
+            const inProgress = reports.filter(r => r.status === 'In Progress').length;
+            const resolved = reports.filter(r => r.status === 'Resolved').length;
+
+            document.getElementById('total-reports').textContent = total;
+            document.getElementById('pending-reports').textContent = pending;
+            document.getElementById('active-reports').textContent = inProgress;
+            document.getElementById('resolved-reports').textContent = resolved;
+        }
+
+        function applyFilters() {
+            const statusFilter = document.getElementById('status-filter').value;
+            const categoryFilter = document.getElementById('category-filter').value;
+            const dateFilter = document.getElementById('date-filter').value;
+
+            let filteredReports = allReports;
+
+            if (statusFilter) {
+                filteredReports = filteredReports.filter(r => (r.status || 'Pending') === statusFilter);
+            }
+
+            if (categoryFilter) {
+                filteredReports = filteredReports.filter(r => r.category === categoryFilter);
+            }
+
+            if (dateFilter) {
+                const filterDate = new Date(dateFilter).toDateString();
+                filteredReports = filteredReports.filter(r => new Date(r.created_at).toDateString() === filterDate);
+            }
+
+            displayReports(filteredReports);
+        }
+
+        function clearFilters() {
+            document.getElementById('status-filter').value = '';
+            document.getElementById('category-filter').value = '';
+            document.getElementById('date-filter').value = '';
+            displayReports(allReports);
+        }
+
+        function refreshReports() {
+            loadReports();
+        }
+
+        function openStatusModal(reportId) {
+            currentReportId = reportId;
+            const report = allReports.find(r => r.id === reportId);
+            if (report) {
+                document.getElementById('new-status').value = report.status || 'Pending';
+            }
+            document.getElementById('status-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('status-modal').style.display = 'none';
+            currentReportId = null;
+        }
+
+        async function updateStatus() {
+            if (!currentReportId) return;
+
+            const newStatus = document.getElementById('new-status').value;
+            
+            try {
+                const response = await fetch(`/api/reports/${currentReportId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    loadReports(); // Refresh the table
+                    alert('Status updated successfully!');
+                } else {
+                    alert('Error updating status. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error updating status. Please try again.');
+            }
+        }
+
+        function viewDetails(reportId) {
+            const report = allReports.find(r => r.id === reportId);
+            if (report) {
+                const details = `
+Report ID: #${report.id}
+Date: ${new Date(report.created_at).toLocaleString()}
+Category: ${report.category || 'N/A'}
+Description: ${report.description || 'N/A'}
+Location: ${report.location || 'N/A'}
+Status: ${report.status || 'Pending'}
+                `;
+                alert(details);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('status-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

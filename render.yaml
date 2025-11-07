@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: bantay-bot
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VERIFY_TOKEN
+        fromService:
+          type: web
+          name: bantay-bot
+          envVarKey: VERIFY_TOKEN
+      - key: PAGE_ACCESS_TOKEN
+        fromService:
+          type: web
+          name: bantay-bot
+          envVarKey: PAGE_ACCESS_TOKEN
+      - key: SUPABASE_URL
+        fromService:
+          type: web
+          name: bantay-bot
+          envVarKey: SUPABASE_URL
+      - key: SUPABASE_KEY
+        fromService:
+          type: web
+          name: bantay-bot
+          envVarKey: SUPABASE_KEY
