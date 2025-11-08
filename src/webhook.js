@@ -289,11 +289,11 @@ async function handleAttachment(sender, attachments) {
       convoState.set(sender, state);
       
       await sendMessage(sender, { 
-        text: "📸 Thank you for the image! This helps us better understand the situation.\n\nNow, please provide your contact information (phone number or name):" 
+        text: "📸 Thank you for the image! This helps us better understand the situation.\n\nNow, where did this happen? (Please provide brgy/landmark/address)" 
       });
       
-      // Move to contact step
-      state.step = 'contact';
+      // Move to location step
+      state.step = 'location';
       convoState.set(sender, state);
       return;
     }
