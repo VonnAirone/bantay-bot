@@ -1,0 +1,36 @@
+<!-- Admin Dashboard Modals -->
+
+<!-- Update Status Modal -->
+<div id="status-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Update Report Status</h3>
+        <div style="margin: 1rem 0;">
+            <label for="new-status">New Status:</label>
+            <select id="new-status">
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Dismissed">Dismissed</option>
+            </select>
+        </div>
+        <div style="text-align: right;">
+            <button onclick="closeModal()" class="action-btn">Cancel</button>
+            <button onclick="updateStatus()" class="action-btn btn-primary">Update</button>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div id="details-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeDetailsModal()">&times;</span>
+        <h3>📋 Report Details</h3>
+        <div id="details-content">
+            <!-- Details will be populated here -->
+        </div>
+        <div style="text-align: right; margin-top: 1rem;">
+            <button onclick="closeDetailsModal()" class="action-btn btn-primary">Close</button>
+        </div>
+    </div>
+</div>
