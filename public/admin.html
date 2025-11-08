@@ -440,8 +440,8 @@
         }
 
         function openStatusModal(reportId) {
-            currentReportId = reportId;
-            const report = allReports.find(r => r.id === reportId);
+            currentReportId = parseInt(reportId); // Convert to number
+            const report = allReports.find(r => r.id === currentReportId);
             if (report) {
                 document.getElementById('new-status').value = report.status || 'Pending';
             }
@@ -481,7 +481,7 @@
         }
 
         function viewDetails(reportId) {
-            console.log('viewDetails called with reportId:', reportId);
+            console.log('viewDetails called with reportId:', reportId, 'type:', typeof reportId);
             console.log('currentReports:', currentReports);
             
             try {
@@ -490,11 +490,15 @@
                     return;
                 }
                 
-                const report = currentReports.find(r => r.id === reportId);
+                // Convert reportId to number to match database ID type
+                const numericReportId = parseInt(reportId);
+                console.log('Looking for numeric ID:', numericReportId);
+                
+                const report = currentReports.find(r => r.id === numericReportId);
                 console.log('Found report:', report);
                 
                 if (!report) {
-                    alert(`Report with ID ${reportId} not found.`);
+                    alert(`Report with ID ${numericReportId} not found.`);
                     return;
                 }
                 
