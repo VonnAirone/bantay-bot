@@ -333,6 +333,7 @@
 
     <script>
         let allReports = [];
+        let currentReports = [];
         let currentReportId = null;
 
         // Load reports on page load
@@ -361,11 +362,12 @@
         }
 
         function displayReports(reports) {
+            currentReports = reports; // Store current reports for view details
             const tbody = document.getElementById('reports-tbody');
             tbody.innerHTML = '';
 
             if (reports.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #666;">No reports found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 2rem; color: #666;">No reports found</td></tr>';
                 return;
             }
 
@@ -479,8 +481,23 @@
         }
 
         function viewDetails(reportId) {
-            const report = currentReports.find(r => r.id === reportId);
-            if (report) {
+            console.log('viewDetails called with reportId:', reportId);
+            console.log('currentReports:', currentReports);
+            
+            try {
+                if (!currentReports || currentReports.length === 0) {
+                    alert('No reports data available. Please refresh the page.');
+                    return;
+                }
+                
+                const report = currentReports.find(r => r.id === reportId);
+                console.log('Found report:', report);
+                
+                if (!report) {
+                    alert(`Report with ID ${reportId} not found.`);
+                    return;
+                }
+                
                 const submittedBy = report.users ? 
                     (report.users.name || `Facebook User (${report.users.fb_id})`) : 
                     'Unknown User';
@@ -522,6 +539,9 @@
                 
                 document.getElementById('details-content').innerHTML = detailsHtml;
                 document.getElementById('details-modal').style.display = 'block';
+            } catch (error) {
+                console.error('Error in viewDetails:', error);
+                alert('Error loading report details. Please try again.');
             }
         }
 
