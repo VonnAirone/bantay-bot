@@ -90,6 +90,12 @@ router.post('/webhook', async (req, res) => {
           continue;
         }
 
+        // Handle image attachments
+        if (event.message && event.message.attachments) {
+          await handleAttachment(sender, event.message.attachments);
+          continue;
+        }
+
         // Regular message text
         if (event.message && event.message.text) {
           const text = event.message.text.trim();
@@ -126,6 +132,21 @@ async function handlePayload(sender, payload) {
     const cat = payload.replace('CATEGORY_', '');
     convoState.set(sender, { step: 'description', category: cat });
     await sendMessage(sender, { text: `You selected *${cat}*. Please describe what happened.` });
+    return;
+  }
+
+  if (lower === 'send_photo') {
+    await sendMessage(sender, { text: '📸 Please send a photo of the incident now.' });
+    return;
+  }
+
+  if (lower === 'skip_photo') {
+    const state = convoState.get(sender);
+    if (state && state.step === 'image') {
+      state.step = 'location';
+      convoState.set(sender, state);
+      await sendMessage(sender, { text: 'Where did this happen? (Please provide brgy/landmark/address)' });
+    }
     return;
   }
 
@@ -249,6 +270,41 @@ VALDERRAMA: 09177145517`
   await sendMessage(sender, { text: "I didn't understand that. You can type 'Report' or use the quick replies." });
 }
 
+async function handleAttachment(sender, attachments) {
+  const state = convoState.get(sender) || null;
+  
+  // Only handle images during the report flow
+  if (!state || state.step !== 'image') {
+    await sendMessage(sender, { 
+      text: "📸 I can accept images during incident reporting. Please start a report first by typing 'Report' or using the menu." 
+    });
+    return;
+  }
+  
+  // Process image attachments
+  for (const attachment of attachments) {
+    if (attachment.type === 'image') {
+      // Store image URL in the report data
+      state.imageUrl = attachment.payload.url;
+      convoState.set(sender, state);
+      
+      await sendMessage(sender, { 
+        text: "📸 Thank you for the image! This helps us better understand the situation.\n\nNow, please provide your contact information (phone number or name):" 
+      });
+      
+      // Move to contact step
+      state.step = 'contact';
+      convoState.set(sender, state);
+      return;
+    }
+  }
+  
+  // If no images found
+  await sendMessage(sender, { 
+    text: "I can only process images. Please send a photo of the incident or type 'skip' to continue without an image." 
+  });
+}
+
 async function handleTextMessage(sender, text) {
   const state = convoState.get(sender) || null;
 
@@ -355,12 +411,30 @@ VALDERRAMA: 09177145517`
   }
 
   if (state.step === 'description') {
-    // Save description and ask for location
+    // Save description and ask for image
     state.description = text;
-    state.step = 'location';
+    state.step = 'image';
     convoState.set(sender, state);
-    await sendMessage(sender, { text: 'Where did this happen? (Please provide brgy/landmark/address)' });
+    
+    const qr = formatQuickReplies('📸 Do you have a photo of the incident? This helps us assess the situation better.', [
+      { title: 'Send Photo', payload: 'SEND_PHOTO' },
+      { title: 'Skip Photo', payload: 'SKIP_PHOTO' }
+    ]);
+    await sendMessage(sender, qr);
     return;
+  }
+
+  if (state.step === 'image') {
+    // Handle text responses for image step
+    if (text.toLowerCase().includes('skip')) {
+      state.step = 'location';
+      convoState.set(sender, state);
+      await sendMessage(sender, { text: 'Where did this happen? (Please provide brgy/landmark/address)' });
+      return;
+    } else {
+      await sendMessage(sender, { text: '📸 Please send a photo or tap "Skip Photo" to continue without an image.' });
+      return;
+    }
   }
 
   if (state.step === 'location') {
@@ -388,6 +462,7 @@ VALDERRAMA: 09177145517`
         category: state.category,
         description: state.description,
         location: state.location,
+        image_url: state.imageUrl || null,
         status: 'Pending'
       }]);
 

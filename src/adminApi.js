@@ -25,6 +25,7 @@ router.get('/reports', async (req, res) => {
         category,
         description,
         location,
+        image_url,
         status,
         created_at,
         users(fb_id, name)
